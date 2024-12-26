@@ -5,4 +5,4 @@ ToDo web app with react
 
 1) Clone the project
 2) Install npm packages
-3) Do "npm run dev"
+3) Run "npm run dev" 

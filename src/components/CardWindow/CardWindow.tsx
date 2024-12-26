@@ -1,5 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 import './CardWindow.css';
+import { fetchTasks, addTask } from '../utils/api'; 
 
 type Task = {
   id: number;
@@ -13,43 +14,28 @@ export default function CardWindow() {
   const [newTask, setNewTask] = useState('');
   const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
   const [editedTodo, setEditedTodo] = useState('');
-  const [tid,setTid] = useState<number>(1000)
+  const [tid, setTid] = useState<number>(1000);
 
   useEffect(() => {
-    fetch('https://dummyjson.com/todos?limit=7&skip=10')
-      .then((response) => response.json())
-      .then((data) => {
-        setTasks(data.todos);
-      })
-      .catch((error) => console.error("Error fetching tasks:", error));
+    fetchTasks()
+      .then((todos) => setTasks(todos))
+      .catch((error) => console.error('Error:', error));
   }, []);
 
-  const handleAddClick = () => {
-    setIsPopupVisible(true);
-  };
+  const handleAddClick = () => setIsPopupVisible(true);
 
   const handleOkClick = () => {
     if (newTask.trim()) {
-      fetch('https://dummyjson.com/todos/add', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          todo: newTask,
-          completed: false,
-          userId: 5,
-        }),
-      })
-        .then((response) => response.json())
+      addTask(newTask)
         .then(() => {
-            setTid(tid+1)
+          setTid((prev) => prev + 1);
           setTasks((prevTasks) => [
             ...prevTasks,
             { id: tid, todo: newTask, completed: false },
           ]);
         })
-        .catch((error) => console.error("Error adding task:", error));
+        .catch((error) => console.error('Error:', error));
     }
-
     setIsPopupVisible(false);
     setNewTask('');
   };
@@ -59,10 +45,9 @@ export default function CardWindow() {
     setNewTask('');
   };
 
-
   const handleEditClick = (taskId: number, currentTodo: string) => {
-    setEditingTaskId(taskId); 
-    setEditedTodo(currentTodo); 
+    setEditingTaskId(taskId);
+    setEditedTodo(currentTodo);
   };
 
   const handleSaveEditClick = () => {
@@ -74,7 +59,7 @@ export default function CardWindow() {
             : task
         )
       );
-      setEditingTaskId(null); 
+      setEditingTaskId(null);
       setEditedTodo('');
     }
   };
@@ -85,80 +70,83 @@ export default function CardWindow() {
     );
   };
 
-  const handleCompleteClick = (taskId:number)=>{
+  const handleCompleteClick = (taskId: number) => {
     setTasks((prevTasks) =>
-        prevTasks.map((task) =>
-          task.id === taskId
-            ? { ...task, completed: true }
-            : task
-        )
-      );
-  }
+      prevTasks.map((task) =>
+        task.id === taskId
+          ? { ...task, completed: true }
+          : task
+      )
+    );
+  };
 
   return (
     <div className="main-content">
-        <div className="todos">
+      <div className="todos">
         <h2>To-Do List</h2>
         <div className="todos-list">
-            <ul>
+          <ul>
             {tasks.map((task) => (
-                <li key={task.id} className={task.completed ? "completed" : ""}>
+              <li key={task.id} className={task.completed ? 'completed' : ''}>
                 <span className="todo-span">
-                    {editingTaskId === task.id ? (
+                  {editingTaskId === task.id ? (
                     <input
-                        type="text"
-                        value={editedTodo}
-                        onChange={(e) => setEditedTodo(e.target.value)}
-                        className="edit-input"
+                      type="text"
+                      value={editedTodo}
+                      onChange={(e) => setEditedTodo(e.target.value)}
+                      className="edit-input"
                     />
-                    ) : (
+                  ) : (
                     task.todo
-                    )}
+                  )}
                 </span>
-                <button className={task.completed ? "completed" : "complete"}
-                    onClick={() =>
-                        task.completed ? null: handleCompleteClick(task.id)
-                        }
+                <button
+                  className={task.completed ? 'completed' : 'complete'}
+                  onClick={() =>
+                    task.completed ? null : handleCompleteClick(task.id)
+                  }
                 >
-                    {task.completed ? "Done ✔️" : "Complete"}
+                  {task.completed ? 'Done ✔️' : 'Complete'}
                 </button>
                 <button
-                    className="Edit"
-                    onClick={() =>
-                    editingTaskId === task.id ? handleSaveEditClick() : handleEditClick(task.id, task.todo)
-                    }
+                  className="Edit"
+                  onClick={() =>
+                    editingTaskId === task.id
+                      ? handleSaveEditClick()
+                      : handleEditClick(task.id, task.todo)
+                  }
                 >
-                    {editingTaskId === task.id ? 'Save' : 'Edit'}
+                  {editingTaskId === task.id ? 'Save' : 'Edit'}
                 </button>
                 <button
-                    className="Delete"
-                    onClick={() => handleDeleteClick(task.id)}
+                  className="Delete"
+                  onClick={() => handleDeleteClick(task.id)}
                 >
-                    Delete
+                  Delete
                 </button>
-                </li>
+              </li>
             ))}
-            </ul>
+          </ul>
         </div>
         <button className="add-todo-btn" onClick={handleAddClick}>+</button>
         {isPopupVisible && (
-            <div className="popup">
+          <div className="popup">
             <div className="popup-content">
-                <input
+              <input
                 type="text"
                 placeholder="Enter a new task"
                 value={newTask}
                 onChange={(e) => setNewTask(e.target.value)}
                 className="popup-input"
-                />
-                <div className="popup-buttons">
+              />
+              <div className="popup-buttons">
                 <button onClick={handleOkClick} className="popup-ok">OK</button>
                 <button onClick={handleCancelClick} className="popup-cancel">Cancel</button>
-                </div>
+              </div>
             </div>
-            </div>
+          </div>
         )}
-        </div>
+      </div>
     </div>
   );
 }
